@@ -2,8 +2,8 @@
 //  Shaders.metal
 //  MetalShaderImageRender
 //
-//  Created by Shuichi Tsutsumi on 2017/09/23.
-//  Copyright © 2017 Shuichi Tsutsumi. All rights reserved.
+//  Created by shinriyo on 2021/02/19.
+//  Copyright © 2021 shinriyo. All rights reserved.
 //
 
 #include <metal_stdlib>
@@ -32,4 +32,3 @@ fragment float4 fragmentShader(ColorInOut       in      [[ stage_in ]],
     float4 color = texture.sample(colorSampler, in.texCoords);
     return color;
 }
-

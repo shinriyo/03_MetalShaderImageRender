@@ -2,8 +2,8 @@
 //  AppDelegate.swift
 //  MetalShaderImageRender
 //
-//  Created by Shuichi Tsutsumi on 2017/09/10.
-//  Copyright © 2017 Shuichi Tsutsumi. All rights reserved.
+//  Created by shinriyo on 2021/02/19.
+//  Copyright © 2021 shinriyo. All rights reserved.
 //
 
 import UIKit
