@@ -21,7 +21,7 @@ let textureCoordinateData: [Float] = [0, 1,
                                       1, 0]
 
 class ViewController: UIViewController, MTKViewDelegate {
-    public var animation = false
+    public var isAnimation = false
     private let device = MTLCreateSystemDefaultDevice()!
     private var commandQueue: MTLCommandQueue!
     private var texture: MTLTexture!
@@ -40,22 +40,22 @@ class ViewController: UIViewController, MTKViewDelegate {
         super.viewDidLoad()
 
         mtkView.backgroundColor = .clear
-        // Metalのセットアップ
+        // setup Metal
         setupMetal()
 
-        // 画像をテクスチャとしてロード
+        // load image as texture
         loadTexture()
 
-        //
+        // make buffers
         makeBuffers()
         
-        //
+        // make pipeline
         makePipeline(pixelFormat: self.texture.pixelFormat)
         
-        //
-        mtkView.enableSetNeedsDisplay = true
+        // if true it need next
+        // mtkView.enableSetNeedsDisplay = true
 
-        // ビューの更新依頼 → draw(in:)が呼ばれる
+        // delegate draw, and draw(in:) called
         mtkView.setNeedsDisplay()
     }
 
@@ -63,7 +63,7 @@ class ViewController: UIViewController, MTKViewDelegate {
         // MTLCommandQueueを初期化
         commandQueue = device.makeCommandQueue()
         
-        // MTKViewのセットアップ
+        // setup MTKView
         mtkView.device = device
         mtkView.delegate = self
     }
@@ -87,15 +87,13 @@ class ViewController: UIViewController, MTKViewDelegate {
     }
 
     private func loadTexture() {
-        // MTKTextureLoaderを初期化
+        // initialize MTKTextureLoader
         let textureLoader = MTKTextureLoader(device: device)
         
         var textures: [MTLTexture] = []
 
-//        let filePath = Bundle.main.path(forResource: "160603_animate", ofType: "png")!
-//        let fileUrl = URL(fileURLWithPath: filePath)
-        guard
-            let fileUrl = createLocalUrl(forImageNamed: "160603_animate") else {return}
+        let filePath = Bundle.main.path(forResource: "160603_animate", ofType: "png")!
+        let fileUrl = URL(fileURLWithPath: filePath)
         guard
             let data = try? Data(contentsOf: fileUrl) as NSData,
             // CGImageSourceRef
@@ -114,7 +112,7 @@ class ViewController: UIViewController, MTKViewDelegate {
         for index in 0 ..< self.imageCount
         {
             if
-                // n番目の画像を取得する
+                // get no n image
                 let cgImage = CGImageSourceCreateImageAtIndex(imageSource, index, nil),
                 let texture = try? textureLoader.newTexture(
                     // don't forget option
@@ -135,27 +133,26 @@ class ViewController: UIViewController, MTKViewDelegate {
         // APNG splited textures
         self.textures = textures
         
-        // ピクセルフォーマットを合わせる
+        // fix pixelFormat
         mtkView.colorPixelFormat = texture.pixelFormat
     }
     
     // MARK: - MTKViewDelegate
-    
     func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {
         print("\(self.classForCoder)/" + #function)
     }
     
     func draw(in view: MTKView) {
-        // ドローアブルを取得
+        // get drawable
         guard let drawable = view.currentDrawable else {return}
 
-        // コマンドバッファを作成
+        // create commandBuffer
         guard let commandBuffer = commandQueue.makeCommandBuffer() else {fatalError()}
 
         //
         renderPassDescriptor.colorAttachments[0].texture = drawable.texture
         
-        // エンコーダ生成
+        // make encoder
         guard let renderEncoder = commandBuffer.makeRenderCommandEncoder(descriptor: renderPassDescriptor) else {return}
 
         guard let renderPipeline = renderPipeline else {fatalError()}
@@ -165,19 +162,18 @@ class ViewController: UIViewController, MTKViewDelegate {
         renderEncoder.setFragmentTexture(texture, index: 0)
         renderEncoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
 
-        // エンコード完了
+        // complete encoding
         renderEncoder.endEncoding()
 
-        // 表示するドローアブルを登録
+        // register drawable for draw
         commandBuffer.present(drawable)
         
-        // コマンドバッファをコミット（エンキュー）
+        // enque
         commandBuffer.commit()
-        
-        // 完了まで待つ
+       
         commandBuffer.waitUntilCompleted()
         
-        // 次回用
+        // for next
         self.texture = self.textures[self.playCount]
         let delayTime = self.delayTimes[playCount]
         
@@ -185,7 +181,7 @@ class ViewController: UIViewController, MTKViewDelegate {
         self.playCount += 1
 
         DispatchQueue.main.asyncAfter(deadline: .now() + delayTime) {
-            // アニメーション終えた
+            // finished
             if self.playCount >= self.imageCount {
                 self.stopAnimating()
                 return
@@ -195,40 +191,19 @@ class ViewController: UIViewController, MTKViewDelegate {
         }
     }
 
-    // draw()を叩くため
+    // call draw()
     private func callDraw() {
-        // ビューの更新依頼 → draw(in:)が呼ばれる
         mtkView.setNeedsDisplay()
 
-        // setNeedsDisplayを呼び出した時間を記録
 //        self.beforeSetNeedsDisplayDelay = DispatchTime.now()
     }
 
-    // 終了
+    // stop
     func stopAnimating() {
         self.playCount = 0
-        self.animation = false
+        self.isAnimation = false
 //        self.viewDelegate?.apngImageView(self)
     }
-}
-
-func createLocalUrl(forImageNamed name: String) -> URL? {
-    let fileManager = FileManager.default
-    let cacheDirectory = fileManager.urls(for: .cachesDirectory, in: .userDomainMask)[0]
-    let url = cacheDirectory.appendingPathComponent("\(name).png")
-    let path = url.path
-
-    guard fileManager.fileExists(atPath: path) else {
-        guard
-            let image = UIImage(named: name),
-            let data = image.pngData()
-            else { return nil }
-
-        fileManager.createFile(atPath: path, contents: data, attributes: nil)
-        return url
-    }
-
-    return url
 }
 
 extension CGImageSource {
@@ -243,4 +218,3 @@ extension CGImageSource {
         return prop["UnclampedDelayTime"] as? Double ?? prop["DelayTime"] as? Double ?? defaultTime
     }
 }
-

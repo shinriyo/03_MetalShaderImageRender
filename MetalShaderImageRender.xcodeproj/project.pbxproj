@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		23DFF8B225E2423A00EB64DE /* 160603_animate.png in Resources */ = {isa = PBXBuildFile; fileRef = 23DFF8B125E2423A00EB64DE /* 160603_animate.png */; };
 		8A0CA7691F65283B00E2858E /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A0CA7681F65283B00E2858E /* AppDelegate.swift */; };
 		8A0CA76B1F65283B00E2858E /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A0CA76A1F65283B00E2858E /* ViewController.swift */; };
 		8A0CA76E1F65283B00E2858E /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 8A0CA76C1F65283B00E2858E /* Main.storyboard */; };
@@ -16,6 +17,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		23DFF8B125E2423A00EB64DE /* 160603_animate.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = 160603_animate.png; path = Assets.xcassets/160603_animate.imageset/160603_animate.png; sourceTree = "<group>"; };
 		8A0CA7651F65283B00E2858E /* MetalShaderImageRender.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MetalShaderImageRender.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8A0CA7681F65283B00E2858E /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		8A0CA76A1F65283B00E2858E /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -58,6 +60,7 @@
 			children = (
 				8A0CA7741F65283B00E2858E /* Info.plist */,
 				8A0CA76F1F65283B00E2858E /* Assets.xcassets */,
+				23DFF8B125E2423A00EB64DE /* 160603_animate.png */,
 				8A0CA7711F65283B00E2858E /* LaunchScreen.storyboard */,
 				8A0CA76C1F65283B00E2858E /* Main.storyboard */,
 				8A0CA7681F65283B00E2858E /* AppDelegate.swift */,
@@ -130,6 +133,7 @@
 				8A0CA7731F65283B00E2858E /* LaunchScreen.storyboard in Resources */,
 				8A0CA7701F65283B00E2858E /* Assets.xcassets in Resources */,
 				8A0CA76E1F65283B00E2858E /* Main.storyboard in Resources */,
+				23DFF8B225E2423A00EB64DE /* 160603_animate.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
