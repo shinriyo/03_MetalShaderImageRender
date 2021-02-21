@@ -8,6 +8,7 @@
 
 import UIKit
 import MetalKit
+import ImageIO
 
 let vertexData: [Float] = [-1, -1, 0, 1,
                             1, -1, 0, 1,
@@ -20,11 +21,14 @@ let textureCoordinateData: [Float] = [0, 1,
                                       1, 0]
 
 class ViewController: UIViewController, MTKViewDelegate {
-
+    public var animation = false
     private let device = MTLCreateSystemDefaultDevice()!
     private var commandQueue: MTLCommandQueue!
     private var texture: MTLTexture!
-
+    private var textures: [MTLTexture]!
+    private var delayTimes: [Double]!
+    private var imageCount = 0
+    private var playCount = 0
     private var vertexBuffer: MTLBuffer!
     private var texCoordBuffer: MTLBuffer!
     private var renderPipeline: MTLRenderPipelineState!
@@ -35,7 +39,6 @@ class ViewController: UIViewController, MTKViewDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-//        mtkView.backgroundColor = .clear
         mtkView.backgroundColor = .clear
         // Metalのセットアップ
         setupMetal()
@@ -47,7 +50,7 @@ class ViewController: UIViewController, MTKViewDelegate {
         makeBuffers()
         
         //
-        makePipeline(pixelFormat: texture.pixelFormat)
+        makePipeline(pixelFormat: self.texture.pixelFormat)
         
         //
         mtkView.enableSetNeedsDisplay = true
@@ -86,12 +89,51 @@ class ViewController: UIViewController, MTKViewDelegate {
     private func loadTexture() {
         // MTKTextureLoaderを初期化
         let textureLoader = MTKTextureLoader(device: device)
-        // テクスチャをロード
-        texture = try! textureLoader.newTexture(
-//            name: "highsierra",
-            name: "160603_animate",
-            scaleFactor: view.contentScaleFactor,
-            bundle: nil)
+        
+        var textures: [MTLTexture] = []
+
+//        let filePath = Bundle.main.path(forResource: "160603_animate", ofType: "png")!
+//        let fileUrl = URL(fileURLWithPath: filePath)
+        guard
+            let fileUrl = createLocalUrl(forImageNamed: "160603_animate") else {return}
+        guard
+            let data = try? Data(contentsOf: fileUrl) as NSData,
+            // CGImageSourceRef
+            let imageSource = CGImageSourceCreateWithData(
+                data,
+                nil
+            ) else { return  }
+        
+        // count images from APNG
+        self.imageCount = CGImageSourceGetCount(imageSource)
+
+        // DelayTimes
+        var delayTimes: [Double] = []
+        // FPS (lower is slower)
+        // self.preferredFramesPerSecond = 24
+        for index in 0 ..< self.imageCount
+        {
+            if
+                // n番目の画像を取得する
+                let cgImage = CGImageSourceCreateImageAtIndex(imageSource, index, nil),
+                let texture = try? textureLoader.newTexture(
+                    // don't forget option
+                    cgImage: cgImage, options: [MTKTextureLoader.Option.SRGB : (false as NSNumber)])
+            {
+                // add DelayTime
+                let delayTime = imageSource.getDelayTime(index: index)
+                delayTimes.append(delayTime)
+                // add texture
+                textures.append(texture)
+            }
+        }
+        
+        // add DelayTimes
+        self.delayTimes = delayTimes
+        // first one
+        self.texture = textures.first
+        // APNG splited textures
+        self.textures = textures
         
         // ピクセルフォーマットを合わせる
         mtkView.colorPixelFormat = texture.pixelFormat
@@ -134,6 +176,71 @@ class ViewController: UIViewController, MTKViewDelegate {
         
         // 完了まで待つ
         commandBuffer.waitUntilCompleted()
+        
+        // 次回用
+        self.texture = self.textures[self.playCount]
+        let delayTime = self.delayTimes[playCount]
+        
+        // increment
+        self.playCount += 1
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + delayTime) {
+            // アニメーション終えた
+            if self.playCount >= self.imageCount {
+                self.stopAnimating()
+                return
+            }
+
+            self.callDraw()
+        }
+    }
+
+    // draw()を叩くため
+    private func callDraw() {
+        // ビューの更新依頼 → draw(in:)が呼ばれる
+        mtkView.setNeedsDisplay()
+
+        // setNeedsDisplayを呼び出した時間を記録
+//        self.beforeSetNeedsDisplayDelay = DispatchTime.now()
+    }
+
+    // 終了
+    func stopAnimating() {
+        self.playCount = 0
+        self.animation = false
+//        self.viewDelegate?.apngImageView(self)
+    }
+}
+
+func createLocalUrl(forImageNamed name: String) -> URL? {
+    let fileManager = FileManager.default
+    let cacheDirectory = fileManager.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+    let url = cacheDirectory.appendingPathComponent("\(name).png")
+    let path = url.path
+
+    guard fileManager.fileExists(atPath: path) else {
+        guard
+            let image = UIImage(named: name),
+            let data = image.pngData()
+            else { return nil }
+
+        fileManager.createFile(atPath: path, contents: data, attributes: nil)
+        return url
+    }
+
+    return url
+}
+
+extension CGImageSource {
+    func getDelayTime(index: Int) -> Double {
+        let defaultTime = 0.1
+        guard let props = CGImageSourceCopyPropertiesAtIndex(self, index, nil) as? [String: Any] else {
+            return defaultTime
+        }
+        guard let prop = props["{PNG}"] as? [String: Any] ?? props["{GIF}"] as? [String: Any] else {
+            return defaultTime
+        }
+        return prop["UnclampedDelayTime"] as? Double ?? prop["DelayTime"] as? Double ?? defaultTime
     }
 }
 
