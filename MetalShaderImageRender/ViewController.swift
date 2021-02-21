@@ -91,8 +91,8 @@ class ViewController: UIViewController, MTKViewDelegate {
         let textureLoader = MTKTextureLoader(device: device)
         
         var textures: [MTLTexture] = []
-
-        let filePath = Bundle.main.path(forResource: "160603_animate", ofType: "png")!
+        // #imageLiteral(resourceName: "Animated_PNG_example_bouncing_beach_ball.png")
+        let filePath = Bundle.main.path(forResource: "Animated_PNG_example_bouncing_beach_ball", ofType: "png")!
         let fileUrl = URL(fileURLWithPath: filePath)
         guard
             let data = try? Data(contentsOf: fileUrl) as NSData,
