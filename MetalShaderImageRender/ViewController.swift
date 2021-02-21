@@ -22,6 +22,10 @@ let textureCoordinateData: [Float] = [0, 1,
 
 class ViewController: UIViewController, MTKViewDelegate {
     public var isAnimation = false
+    public var isInfinite = false
+    public var isFps = false
+    public var fps = 34
+    
     private let device = MTLCreateSystemDefaultDevice()!
     private var commandQueue: MTLCommandQueue!
     private var texture: MTLTexture!
@@ -107,8 +111,12 @@ class ViewController: UIViewController, MTKViewDelegate {
 
         // DelayTimes
         var delayTimes: [Double] = []
-        // FPS (lower is slower)
-        // self.preferredFramesPerSecond = 24
+        
+        if self.isFps {
+            // FPS (lower is slower)
+            mtkView.preferredFramesPerSecond = self.fps
+        }
+
         for index in 0 ..< self.imageCount
         {
             if
@@ -176,18 +184,35 @@ class ViewController: UIViewController, MTKViewDelegate {
         // for next
         self.texture = self.textures[self.playCount]
         let delayTime = self.delayTimes[playCount]
+
+        if self.isInfinite {
+            return
+        }
+
         
         // increment
         self.playCount += 1
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + delayTime) {
-            // finished
-            if self.playCount >= self.imageCount {
-                self.stopAnimating()
-                return
+        if isFps {
+            if isInfinite {
+                if self.playCount >= self.imageCount {
+                    self.playCount = 0
+                }
             }
+        } else {
+            DispatchQueue.main.asyncAfter(deadline: .now() + delayTime) {
+                if self.playCount >= self.imageCount {
+                    // finished
+                    if self.isInfinite {
+                        self.playCount = 0
+                    } else {
+                        self.stopAnimating()
+                        return
+                    }
+                }
 
-            self.callDraw()
+                self.callDraw()
+            }
         }
     }
 
