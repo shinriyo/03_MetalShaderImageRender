@@ -1,6 +1,12 @@
-# 03_MetalShaderImageRender
+# Metalphose
 
-APNG Animation
+iOS
 
-metalphose
+Swift
 
+It is APNG Animation tool with using Metal.
+
+
+## Author
+
+shinriyo
